@@ -15,3 +15,6 @@ managed_components/
 .DS_Store
 Thumbs.db
 
+# Host-specific ESP-IDF installation paths
+scripts/esp-idf.paths.local.ps1
+

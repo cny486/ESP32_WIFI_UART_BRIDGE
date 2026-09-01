@@ -15,7 +15,16 @@ ESP-IDF 会自动发现这两个组件，因此只需克隆本仓库，无需准
 
 ## 配置与构建
 
-仓库不保存现场 Wi-Fi 凭据，`sdkconfig` 仅保留在本机且被 Git 忽略。首次使用时执行：
+宿主机需要自行安装 ESP-IDF v6.1。首次使用项目脚本前，保存本机 ESP-IDF profile 路径：
+
+```powershell
+.\scripts\set-esp-idf-paths.ps1 `
+  -EspIdfProfile "C:\你的安装目录\ESP-IDF-PowerShell-profile.ps1"
+```
+
+安装程序没有把 Ninja、工具链、CMake 或 Python 加入 profile 时，可同时传入 `-NinjaPath`、`-ToolchainBin`、`-CMakePath` 和 `-PythonPath`。配置保存在被 Git 忽略的 `scripts/esp-idf.paths.local.ps1`；字段说明也可参考 `scripts/esp-idf.paths.example.ps1`。如果当前终端已经激活 ESP-IDF，可以不创建本地路径文件。
+
+仓库不保存现场 Wi-Fi 凭据，`sdkconfig` 仅保留在本机且被 Git 忽略。路径配置完成后执行：
 
 ```powershell
 .\scripts\configure.ps1

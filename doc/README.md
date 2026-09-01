@@ -16,6 +16,7 @@
 - 2026-09-01 02:28 +0800：现场测得 MAX3490 RO 已有波形，并确认 RO 实际连接 GPIO43。将 UART1 RX 改为 GPIO43，同时将 TX 改为连接 DI 的 GPIO44，最终路由为 GPIO44/TX、GPIO43/RX；启动配置列表同步显示新值。ESP-IDF v6.1 全量构建通过，固件为 `0xc6c60` 字节，默认app分区剩余22%；硬件接收验证待执行。
 - 2026-09-01 18:07 +0800：为 GitHub 初次发布补充仓库根说明、忽略规则和可重复执行的 `scripts/publish-github.ps1`。本机 `sdkconfig` 及构建产物不进入版本库，`sdkconfig.defaults` 已移除现场 SSID、密码和 TCP 地址；本机有效配置保持不变。桥接源码和组件引用架构未改动。
 - 2026-09-01 18:15 +0800：按独立克隆构建要求，将 `wifi_module`、`uart_pt` 的完整源码纳入 ESP-IDF 标准 `components/` 目录，删除仓库外 `EXTRA_COMPONENT_DIRS`，并补充通用 `idf.py` 构建说明。ESP-IDF v6.1 全量构建通过，CMake 确认使用仓库内组件，实际生成并链接 `libwifi_module.a`、`libuart_pt.a`；固件为 `0xc6c60` 字节，默认 app 分区剩余 22%。硬件验证待执行。
+- 2026-09-01 18:31 +0800：构建环境改为由宿主机自行安装 ESP-IDF，项目新增可提交的路径模板、被 Git 忽略的本机路径配置和 `set-esp-idf-paths.ps1` 生成脚本。构建、menuconfig、清理脚本统一加载该配置，也兼容已激活 ESP-IDF 的终端；所有工具路径均不再硬编码在操作脚本中。使用本机路径配置完成 ESP-IDF v6.1 全量构建，固件仍为 `0xc6c60` 字节，默认 app 分区剩余 22%。
 
 ## 设计
 
@@ -24,6 +25,13 @@
 - **目标**：把 Wi-Fi 和 UART 组件完整纳入 ESP-IDF 工程的标准 `components/` 目录，使仓库可独立克隆、配置和构建。
 - **依赖设计**：ESP-IDF 自动扫描 `components/wifi_module` 和 `components/uart_pt`；应用 `main` 通过 `PRIV_REQUIRES wifi_module uart_pt` 声明直接依赖，顶层 CMake 不再使用仓库外 `EXTRA_COMPONENT_DIRS`。
 - **同步约束**：仓库内组件是本项目可构建版本。源组件后续变化不会自动进入本仓库，需要明确同步、重新构建并更新开发记录。
+
+### 功能：宿主机 ESP-IDF 路径配置
+
+- **目标**：工具链由使用者安装在宿主机，项目脚本不依赖固定盘符、用户名或安装目录。
+- **配置设计**：仓库提交 `esp-idf.paths.example.ps1` 作为字段模板；`set-esp-idf-paths.ps1` 验证输入路径后生成当前机器专属的 `esp-idf.paths.local.ps1`，该文件由 Git 忽略。
+- **加载设计**：`build.ps1`、`configure.ps1` 和 `clean.ps1` 统一调用 `esp-idf-environment.ps1`。如果终端已有 `idf.py` 和有效 `IDF_PATH`，直接复用当前环境；否则加载本机配置指定的 PowerShell profile。
+- **覆盖范围**：ESP-IDF profile 是未激活终端的主要配置；Ninja、Xtensa 工具链、CMake 和 Python 路径是可选覆盖项，用于处理部分 Windows 安装或受限环境的自动发现问题。
 
 ### 功能：UART—TCP 双向桥接
 
@@ -47,6 +55,9 @@
 - `scripts/build.ps1`：配置并构建项目，检查每一步退出码。
 - `scripts/configure.ps1`：打开项目的 `menuconfig`，配置网络和 UART 参数。
 - `scripts/clean.ps1`：清理 ESP-IDF 默认构建目录。
+- `scripts/esp-idf-environment.ps1`：统一加载已激活环境或本机 ESP-IDF 路径配置。
+- `scripts/esp-idf.paths.example.ps1`：可提交的宿主机工具路径配置模板。
+- `scripts/set-esp-idf-paths.ps1`：验证并生成被 Git 忽略的本机路径配置。
 - `scripts/publish-github.ps1`：检查凭据、提交并推送项目到约定的 GitHub 远端，不执行强制推送。
 - `doc/`：总说明和单次开发记录。
 
@@ -68,10 +79,17 @@
 
 ## 构建方式
 
-在模块根目录执行：
+宿主机先安装 ESP-IDF v6.1。若当前 PowerShell 尚未激活 ESP-IDF，先保存 profile 路径：
+
+```powershell
+.\scripts\set-esp-idf-paths.ps1 `
+  -EspIdfProfile "C:\你的安装目录\ESP-IDF-PowerShell-profile.ps1"
+```
+
+然后在模块根目录执行：
 
 ```powershell
 .\scripts\build.ps1
 ```
 
-构建脚本显式配置本机 Ninja、ESP32-S3 工具链和 bootloader 子工程，关闭 ccache、限制并发并检查退出码。构建产物保存在 `src/WIFI_UART_BRIDGE/build/`。本项目未提供自动烧录操作；硬件烧录和连线测试由用户确认设备与串口后执行。
+构建脚本统一读取被 Git 忽略的 `scripts/esp-idf.paths.local.ps1`，也可直接复用已激活的 ESP-IDF 终端。Ninja、ESP32-S3 工具链、CMake 和 Python 通常由 ESP-IDF profile 自动配置，仅在自动发现失败时才需要写入可选覆盖路径。脚本关闭 ccache、限制并发并检查退出码；构建产物保存在 `src/WIFI_UART_BRIDGE/build/`。本项目未提供自动烧录操作；硬件烧录和连线测试由用户确认设备与串口后执行。

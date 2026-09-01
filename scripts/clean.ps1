@@ -5,14 +5,9 @@
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $idfProjectRoot = Join-Path $projectRoot "src\WIFI_UART_BRIDGE"
-$idfProfile = "C:\Espressif\tools\Microsoft.v6.1.PowerShell_profile.ps1"
-
-if (-not (Test-Path -LiteralPath $idfProfile -PathType Leaf)) {
-    throw "未找到 ESP-IDF v6.1 PowerShell 配置：$idfProfile"
-}
-
-. $idfProfile
-$env:PYTHONUTF8 = "1"
+$environmentScript = Join-Path $PSScriptRoot "esp-idf-environment.ps1"
+. $environmentScript
+Initialize-BridgeEspIdfEnvironment
 
 Push-Location $idfProjectRoot
 try {
