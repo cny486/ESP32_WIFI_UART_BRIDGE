@@ -1,0 +1,17 @@
+# ESP-IDF generated files
+**/build/
+**/sdkconfig
+**/sdkconfig.old
+managed_components/
+
+# Generated firmware and debug artifacts
+*.bin
+*.elf
+*.map
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+

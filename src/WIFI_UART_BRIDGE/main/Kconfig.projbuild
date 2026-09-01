@@ -1,0 +1,75 @@
+menu "Wi-Fi UART bridge configuration"
+
+    config BRIDGE_WIFI_SSID
+        string "Wi-Fi SSID"
+        default "cny486"
+
+    config BRIDGE_WIFI_PASSWORD
+        string "Wi-Fi password"
+        default "X42d0791"
+
+    config BRIDGE_TCP_HOST
+        string "TCP server IPv4 address"
+        default "192.168.137.201"
+
+    config BRIDGE_TCP_PORT
+        int "TCP server port"
+        range 1 65535
+        default 54321
+
+    config BRIDGE_UDP_LISTEN_PORT
+        int "UDP TCPCONNECT listen port"
+        range 0 65535
+        default 12345
+
+    config BRIDGE_WIFI_MAX_RETRIES
+        int "Maximum Wi-Fi reconnect attempts (0 means unlimited)"
+        range 0 255
+        default 5
+
+    config BRIDGE_TCP_MAX_RETRIES
+        int "Maximum TCP reconnect attempts (0 means unlimited)"
+        range 0 255
+        default 5
+
+    config BRIDGE_TCP_RETRY_DELAY_MS
+        int "TCP reconnect delay (ms)"
+        range 1 60000
+        default 1000
+
+    config BRIDGE_UART_PORT
+        int "UART controller number"
+        range 0 2
+        default 1
+
+    config BRIDGE_UART_TX_GPIO
+        int "UART TX GPIO"
+        range 0 48
+        default 44
+
+    config BRIDGE_UART_RX_GPIO
+        int "UART RX GPIO"
+        range 0 48
+        default 43
+
+    config BRIDGE_UART_BAUD_RATE
+        int "UART baud rate"
+        range 1200 5000000
+        default 115200
+
+    config BRIDGE_UART_BLOCK_COUNT
+        int "UART upstream fixed block count"
+        range 1 16
+        default 8
+
+    config BRIDGE_UART_RETRY_LIMIT
+        int "UART upstream retry limit"
+        range 0 255
+        default 2
+
+    config BRIDGE_UART_TX_LOCK_TIMEOUT_MS
+        int "UART TX lock timeout (ms)"
+        range 0 60000
+        default 100
+
+endmenu

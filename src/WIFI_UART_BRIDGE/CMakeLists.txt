@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.22)
+
+set(IDF_TARGET "esp32s3" CACHE STRING "ESP-IDF target")
+
+if(DEFINED ENV{WIFI_UART_BRIDGE_NINJA_PATH})
+    set(CMAKE_MAKE_PROGRAM "$ENV{WIFI_UART_BRIDGE_NINJA_PATH}" CACHE FILEPATH "Ninja path from build script" FORCE)
+endif()
+if(DEFINED ENV{WIFI_UART_BRIDGE_TOOLCHAIN_BIN})
+    set(ENV{PATH} "$ENV{WIFI_UART_BRIDGE_TOOLCHAIN_BIN};$ENV{PATH}")
+    set(CMAKE_C_COMPILER "$ENV{WIFI_UART_BRIDGE_TOOLCHAIN_BIN}/xtensa-esp32s3-elf-gcc.exe" CACHE FILEPATH "ESP32-S3 C compiler" FORCE)
+    set(CMAKE_CXX_COMPILER "$ENV{WIFI_UART_BRIDGE_TOOLCHAIN_BIN}/xtensa-esp32s3-elf-g++.exe" CACHE FILEPATH "ESP32-S3 C++ compiler" FORCE)
+    set(CMAKE_ASM_COMPILER "$ENV{WIFI_UART_BRIDGE_TOOLCHAIN_BIN}/xtensa-esp32s3-elf-gcc.exe" CACHE FILEPATH "ESP32-S3 ASM compiler" FORCE)
+endif()
+
+set(EXTRA_COMPONENT_DIRS
+    "${CMAKE_CURRENT_LIST_DIR}/../../../WIFI_MODE_DSS/.component/wifi_module"
+    "${CMAKE_CURRENT_LIST_DIR}/../../../UART_T_T/.component/uart_pt"
+)
+
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(WIFI_UART_BRIDGE)
