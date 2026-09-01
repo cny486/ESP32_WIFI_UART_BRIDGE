@@ -2,7 +2,7 @@
 
 ## 项目功能
 
-本项目是同时引用 `wifi_module` 与 `uart_pt` 两个独立 ESP-IDF component 的集成 Demo。UART RX 数据进入 Wi-Fi TCP 上传队列；Wi-Fi TCP 下行协议数据通过 UART TX 输出，形成双向 UART—TCP 桥接。
+本项目是内置 `wifi_module` 与 `uart_pt` 两个 ESP-IDF component 的自包含集成 Demo。UART RX 数据进入 Wi-Fi TCP 上传队列；Wi-Fi TCP 下行协议数据通过 UART TX 输出，形成双向 UART—TCP 桥接。仓库可独立克隆和构建，不依赖同级源码仓库。
 
 ## 当前状态
 
@@ -15,14 +15,15 @@
 - 2026-09-01 02:04 +0800：增加启动配置列表日志，通过 USB Serial/JTAG 打印 Wi-Fi SSID、TCP/UDP参数、重试参数、UART控制器、引脚、波特率、缓冲块和超时配置。Wi-Fi密码只显示是否已配置，不输出明文。ESP-IDF v6.1 全量构建通过，最终有效配置确认为 UART1、GPIO43/TX、GPIO44/RX；固件为 `0xc6c60` 字节，默认 app 分区剩余22%，硬件验证待执行。
 - 2026-09-01 02:28 +0800：现场测得 MAX3490 RO 已有波形，并确认 RO 实际连接 GPIO43。将 UART1 RX 改为 GPIO43，同时将 TX 改为连接 DI 的 GPIO44，最终路由为 GPIO44/TX、GPIO43/RX；启动配置列表同步显示新值。ESP-IDF v6.1 全量构建通过，固件为 `0xc6c60` 字节，默认app分区剩余22%；硬件接收验证待执行。
 - 2026-09-01 18:07 +0800：为 GitHub 初次发布补充仓库根说明、忽略规则和可重复执行的 `scripts/publish-github.ps1`。本机 `sdkconfig` 及构建产物不进入版本库，`sdkconfig.defaults` 已移除现场 SSID、密码和 TCP 地址；本机有效配置保持不变。桥接源码和组件引用架构未改动。
+- 2026-09-01 18:15 +0800：按独立克隆构建要求，将 `wifi_module`、`uart_pt` 的完整源码纳入 ESP-IDF 标准 `components/` 目录，删除仓库外 `EXTRA_COMPONENT_DIRS`，并补充通用 `idf.py` 构建说明。ESP-IDF v6.1 全量构建通过，CMake 确认使用仓库内组件，实际生成并链接 `libwifi_module.a`、`libuart_pt.a`；固件为 `0xc6c60` 字节，默认 app 分区剩余 22%。硬件验证待执行。
 
 ## 设计
 
-### 功能：同时引用两个独立组件
+### 功能：仓库内置两个独立组件
 
-- **目标**：不复制 Wi-Fi 和 UART 组件源码，通过 CMake 外部组件路径直接复用仓库中的唯一实现，并验证两个组件能在同一固件中配置、编译和链接。
-- **依赖设计**：项目顶层 `CMakeLists.txt` 的 `EXTRA_COMPONENT_DIRS` 同时指向两个 `.component` 子目录；应用 `main` 通过 `PRIV_REQUIRES wifi_module uart_pt` 声明直接依赖。
-- **目录约束**：集成项目只保存桥接业务和自身配置，不修改、镜像或混放组件源码。
+- **目标**：把 Wi-Fi 和 UART 组件完整纳入 ESP-IDF 工程的标准 `components/` 目录，使仓库可独立克隆、配置和构建。
+- **依赖设计**：ESP-IDF 自动扫描 `components/wifi_module` 和 `components/uart_pt`；应用 `main` 通过 `PRIV_REQUIRES wifi_module uart_pt` 声明直接依赖，顶层 CMake 不再使用仓库外 `EXTRA_COMPONENT_DIRS`。
+- **同步约束**：仓库内组件是本项目可构建版本。源组件后续变化不会自动进入本仓库，需要明确同步、重新构建并更新开发记录。
 
 ### 功能：UART—TCP 双向桥接
 
@@ -38,6 +39,8 @@
 ## 架构
 
 - `src/WIFI_UART_BRIDGE/`：独立 ESP-IDF 工程。
+- `src/WIFI_UART_BRIDGE/components/wifi_module/`：仓库内置 Wi-Fi STA、TCP/UDP 与协议处理组件。
+- `src/WIFI_UART_BRIDGE/components/uart_pt/`：仓库内置 UART 双向透传组件。
 - `src/WIFI_UART_BRIDGE/main/main.c`：两个组件的适配与启动入口。
 - `src/WIFI_UART_BRIDGE/main/Kconfig.projbuild`：网络和 UART 参数。
 - `src/WIFI_UART_BRIDGE/build/`：ESP-IDF 默认构建产物目录。

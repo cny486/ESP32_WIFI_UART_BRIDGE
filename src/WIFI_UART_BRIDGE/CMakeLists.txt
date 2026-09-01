@@ -12,10 +12,5 @@ if(DEFINED ENV{WIFI_UART_BRIDGE_TOOLCHAIN_BIN})
     set(CMAKE_ASM_COMPILER "$ENV{WIFI_UART_BRIDGE_TOOLCHAIN_BIN}/xtensa-esp32s3-elf-gcc.exe" CACHE FILEPATH "ESP32-S3 ASM compiler" FORCE)
 endif()
 
-set(EXTRA_COMPONENT_DIRS
-    "${CMAKE_CURRENT_LIST_DIR}/../../../WIFI_MODE_DSS/.component/wifi_module"
-    "${CMAKE_CURRENT_LIST_DIR}/../../../UART_T_T/.component/uart_pt"
-)
-
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(WIFI_UART_BRIDGE)
