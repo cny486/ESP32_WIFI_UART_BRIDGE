@@ -16,11 +16,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
+$gitOptions = @("-c", "safe.directory=$($projectRoot.Replace('\', '/'))")
 
 function Invoke-Git {
     param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
 
-    & git @Arguments
+    & git @gitOptions @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "git $($Arguments -join ' ') 执行失败，退出码：$LASTEXITCODE"
     }
@@ -30,7 +31,7 @@ Push-Location $projectRoot
 try {
     Invoke-Git rev-parse --is-inside-work-tree
 
-    $originUrl = & git remote get-url origin 2>$null
+    $originUrl = & git @gitOptions remote get-url origin 2>$null
     if ($LASTEXITCODE -ne 0) {
         Invoke-Git remote add origin $RemoteUrl
     } elseif ($originUrl.Trim() -ne $RemoteUrl) {
@@ -41,7 +42,7 @@ try {
 
     $passwordKey = "CONFIG_BRIDGE_WIFI_" + "PASSWORD"
     $credentialPattern = $passwordKey + '="[^"]+"'
-    $credentialMatch = & git grep --cached -n -E $credentialPattern -- 2>$null
+    $credentialMatch = & git @gitOptions grep --cached -n -E $credentialPattern -- 2>$null
     if ($LASTEXITCODE -eq 0) {
         throw "检测到待提交文件中包含非空 Wi-Fi 密码：`n$credentialMatch`n请先移除凭据再上传。"
     }
@@ -49,7 +50,7 @@ try {
         throw "凭据检查失败，git grep 退出码：$LASTEXITCODE"
     }
 
-    & git diff --cached --quiet
+    & git @gitOptions diff --cached --quiet
     $hasChanges = $LASTEXITCODE -ne 0
     if ($hasChanges) {
         Invoke-Git commit -m $CommitMessage
